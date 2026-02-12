@@ -1,6 +1,6 @@
-# MakeCode AI for Schools
+# bit:vibe for Schools
 
-This repository provides a MakeCode AI panel that supports both deployment models in one version:
+This repository provides the `bit:vibe` panel for MakeCode and supports both deployment models in one version:
 
 - `Managed` mode: your school uses your hosted backend (`/mcai/generate`)
 - `BYOK` mode: a school enters its own provider/model/key in the panel
@@ -34,7 +34,7 @@ This repository provides a MakeCode AI panel that supports both deployment model
 - `client.js`: earlier userscript variant kept in repo
 - `extension/manifest.json`: Chrome extension manifest template
 - `scripts/build.mjs`: builds `dist/` extension files from `work.js`
-- `scripts/package.mjs`: zips `dist/` into `artifacts/makecode-ai-extension.zip`
+- `scripts/package.mjs`: zips `dist/` into `artifacts/bit-vibe-extension.zip`
 
 ## Runtime modes
 
@@ -87,7 +87,7 @@ npm run package
 
 This builds first, then creates:
 
-- `artifacts/makecode-ai-extension.zip`
+- `artifacts/bit-vibe-extension.zip`
 
 ## Install in Chrome
 
@@ -104,7 +104,7 @@ This builds first, then creates:
 2. Confirm artefacts exist:
    - `dist/content-script.js`
    - `dist/manifest.json`
-   - `artifacts/makecode-ai-extension.zip`
+   - `artifacts/bit-vibe-extension.zip`
 3. Load unpacked extension from `dist/` in Chrome.
 4. Open one MakeCode editor page, for example:
    - `https://makecode.microbit.org/`

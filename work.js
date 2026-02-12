@@ -16,7 +16,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   ui.style.cssText = "position:fixed;right:12px;bottom:12px;width:460px;max-height:84vh;overflow:auto;background:#0b1020;color:#e6e8ef;font-family:system-ui,Segoe UI,Arial,sans-serif;border:1px solid #21304f;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:2147483647";
   ui.innerHTML = ""
     + '<div id="h" style="cursor:move;display:flex;align-items:center;padding:10px 12px;background:#111936;border-bottom:1px solid #21304f">'
-    + '  <span style="font-weight:600;font-size:13px">MakeCode AI</span>'
+    + '  <span style="font-weight:600;font-size:13px">bit:vibe</span>'
     + '  <span id="status" style="margin-left:10px;font-size:11px;color:#9bb1dd">Idle</span>'
     + '  <button id="x" style="margin-left:auto;background:transparent;border:none;color:#93a4c4;font-size:16px;cursor:pointer">x</button>'
     + "</div>"

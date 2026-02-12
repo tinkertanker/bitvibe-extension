@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         MakeCode AI (no-overlap console + exclusive states)
+// @name         bit:vibe (no-overlap console + exclusive states)
 // @namespace    mcai.local
 // @version      0.6
 // @description  Console pinned below content; never overlaps buttons. Either launcher or panel (exclusive). Smooth animations + draggable UI.
@@ -22,7 +22,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   // ---------- Launcher (draggable; won’t open while dragging) ----------
   const launcher = document.createElement('button');
   launcher.id = 'mcai-launcher';
-  launcher.title = 'MakeCode AI (Alt+M)';
+  launcher.title = 'bit:vibe (Alt+M)';
   launcher.style.cssText = `
     position:fixed; right:18px; bottom:18px; z-index:2147483647;
     width:44px; height:44px; border-radius:12px; border:1px solid rgba(125,225,255,.25);
@@ -76,7 +76,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   // ---------- Panel (grid: header / content / console) ----------
   const ui = document.createElement('div');
   ui.setAttribute('role', 'dialog');
-  ui.setAttribute('aria-label', 'MakeCode AI Panel');
+  ui.setAttribute('aria-label', 'bit:vibe Panel');
   ui.style.cssText = `
     position:fixed; right:16px; bottom:16px; z-index:2147483647;
     width:520px; max-width:calc(100vw - 24px);
@@ -185,7 +185,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   header.className = 'mcai-header';
   header.innerHTML = `
     <div class="mcai-logo">M</div>
-    <div class="mcai-title">MakeCode AI</div>
+    <div class="mcai-title">bit:vibe</div>
     <span id="status" class="mcai-status">Idle</span>
     <button id="mcai-close" class="mcai-close" title="Hide panel">✕</button>
   `;

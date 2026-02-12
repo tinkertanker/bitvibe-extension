@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "MakeCode AI Panel",
-  "description": "Inject a MakeCode AI panel into MakeCode editors.",
+  "name": "bit:vibe",
+  "description": "Inject the bit:vibe panel into MakeCode editors.",
   "version": "0.1.0",
   "content_scripts": [
     {

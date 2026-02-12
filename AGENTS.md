@@ -9,7 +9,7 @@ This repository ships one school-facing runtime that supports both:
 
 - Runtime script for shipping/testing: `work.js`
 - Extension build output: `dist/`
-- Packaged zip output: `artifacts/makecode-ai-extension.zip`
+- Packaged zip output: `artifacts/bit-vibe-extension.zip`
 
 `client.js` is legacy and not the primary build source.
 
@@ -24,7 +24,7 @@ Use this exact flow when asked to prepare a testable build:
 3. Verify outputs:
    - `dist/content-script.js`
    - `dist/manifest.json`
-   - `artifacts/makecode-ai-extension.zip`
+   - `artifacts/bit-vibe-extension.zip`
 4. For local browser testing, load unpacked from `dist/` at `chrome://extensions`.
 
 ## Supported keys and endpoints
