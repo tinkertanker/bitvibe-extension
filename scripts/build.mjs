@@ -39,8 +39,8 @@ async function build() {
   let builtClient = rawClient.replace(userscriptHeaderPattern, "");
   const manifest = JSON.parse(rawManifest);
 
-  const backend = process.env.MCAI_BACKEND;
-  const appToken = process.env.MCAI_APP_TOKEN;
+  const backend = process.env.BITVIBE_BACKEND || process.env.MCAI_BACKEND;
+  const appToken = process.env.BITVIBE_APP_TOKEN ?? process.env.MCAI_APP_TOKEN;
 
   if (backend) {
     builtClient = overrideConst(builtClient, "BACKEND", backend);
@@ -62,11 +62,11 @@ async function build() {
 
   console.log("Built Chrome extension files in dist/");
   if (backend) {
-    console.log(`- BACKEND overridden via MCAI_BACKEND: ${backend}`);
+    console.log(`- BACKEND overridden via BITVIBE_BACKEND: ${backend}`);
     console.log(`- host_permissions set to: ${manifest.host_permissions[0]}`);
   }
   if (appToken !== undefined) {
-    console.log("- APP_TOKEN overridden via MCAI_APP_TOKEN");
+    console.log("- APP_TOKEN overridden via BITVIBE_APP_TOKEN");
   }
 }
 

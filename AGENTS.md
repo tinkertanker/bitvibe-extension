@@ -44,13 +44,13 @@ Use this exact flow when asked to prepare a testable build:
 
 ## Build-time overrides
 
-- `MCAI_BACKEND`
-- `MCAI_APP_TOKEN`
+- `BITVIBE_BACKEND`
+- `BITVIBE_APP_TOKEN`
 
 Example:
 
 ```bash
-MCAI_BACKEND="https://your-server.example" MCAI_APP_TOKEN="optional-token" npm run package
+BITVIBE_BACKEND="https://your-server.example" BITVIBE_APP_TOKEN="optional-token" npm run package
 ```
 
 ## Smoke-test checklist

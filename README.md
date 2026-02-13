@@ -20,9 +20,12 @@ This repository provides the `bit:vibe` panel for MakeCode micro:bit and support
 ### BYOK mode
 
 - Provider keys:
-  - OpenAI API key (Bearer auth)
-  - Gemini API key (Google Generative Language API key)
-  - OpenRouter API key (Bearer auth)
+  - OpenAI API key
+  - Gemini API key
+  - OpenRouter API key
+- Request auth details:
+  - OpenAI and OpenRouter keys are sent in the `Authorization` header
+  - Gemini keys are sent as the API key parameter expected by Google
 - Provider endpoints:
   - OpenAI: `https://api.openai.com/v1/chat/completions`
   - Gemini: `https://generativelanguage.googleapis.com/v1/models/{model}:generateContent`
@@ -76,7 +79,7 @@ Outputs:
 Optional build-time backend overrides:
 
 ```bash
-MCAI_BACKEND="https://your-server.example" MCAI_APP_TOKEN="optional-token" npm run build
+BITVIBE_BACKEND="https://your-server.example" BITVIBE_APP_TOKEN="optional-token" npm run build
 ```
 
 ## Package extension zip
@@ -116,7 +119,7 @@ This builds first, then creates:
    - switch to `Bring your own key`
    - select provider + model, enter key
    - confirm generation and paste both work
-7. If updating config values (`MCAI_BACKEND` or `MCAI_APP_TOKEN`), rebuild and reload the extension.
+7. If updating config values (`BITVIBE_BACKEND` or `BITVIBE_APP_TOKEN`), rebuild and reload the extension.
 
 ## Bookmarklet usage
 
