@@ -39,8 +39,8 @@ async function build() {
   let builtClient = rawClient.replace(userscriptHeaderPattern, "");
   const manifest = JSON.parse(rawManifest);
 
-  const backend = process.env.BITVIBE_BACKEND || process.env.MCAI_BACKEND;
-  const appToken = process.env.BITVIBE_APP_TOKEN ?? process.env.MCAI_APP_TOKEN;
+  const backend = process.env.BITVIBE_BACKEND;
+  const appToken = process.env.BITVIBE_APP_TOKEN;
 
   if (backend) {
     builtClient = overrideConst(builtClient, "BACKEND", backend);

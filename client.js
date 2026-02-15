@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bit:vibe (no-overlap console + exclusive states)
-// @namespace    mcai.local
+// @namespace    bitvibe.local
 // @version      0.6
 // @description  Console pinned below content; never overlaps buttons. Either launcher or panel (exclusive). Smooth animations + draggable UI.
 // @match        https://makecode.microbit.org/*
@@ -9,19 +9,19 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-const BACKEND = "https://mcai.dev.tk.sg";
+const BACKEND = "https://bitvibe.dev.tk.sg";
 const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
 (function () {
-  if (window.__mcAIPanelMounted) return;
-  window.__mcAIPanelMounted = true;
-  window.__mcBlocksStrict = 1;
+  if (window.__bitvibePanelMounted) return;
+  window.__bitvibePanelMounted = true;
+  window.__bitvibeStrict = 1;
 
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
   // ---------- Launcher (draggable; won’t open while dragging) ----------
   const launcher = document.createElement('button');
-  launcher.id = 'mcai-launcher';
+  launcher.id = 'bitvibe-launcher';
   launcher.title = 'bit:vibe (Alt+M)';
   launcher.style.cssText = `
     position:fixed; right:18px; bottom:18px; z-index:2147483647;
@@ -87,7 +87,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   const css = document.createElement('style');
   css.textContent = `
-    .mcai-card {
+    .bitvibe-card {
       background: linear-gradient(180deg, #0e1428 0%, #0a1020 100%);
       border: 1px solid rgba(89,123,255,.15);
       border-radius: 14px;
@@ -100,75 +100,75 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
       grid-template-rows: auto 1fr auto;
       height: 100%;
     }
-    .mcai-header { display:flex;align-items:center;gap:10px; padding:12px 14px;
+    .bitvibe-header { display:flex;align-items:center;gap:10px; padding:12px 14px;
       background: linear-gradient(180deg, rgba(22,30,58,.7), rgba(16,22,45,.7));
       border-bottom: 1px solid rgba(89,123,255,.15);
       cursor: move; user-select:none; }
-    .mcai-logo { width:18px;height:18px;border-radius:6px; background: linear-gradient(135deg,#5b7cff,#7de1ff);
+    .bitvibe-logo { width:18px;height:18px;border-radius:6px; background: linear-gradient(135deg,#5b7cff,#7de1ff);
       display:inline-flex;align-items:center;justify-content:center; color:#0b1020;font-weight:900;font-size:12px;
       box-shadow: 0 2px 12px rgba(93,131,255,.45); }
-    .mcai-title { font-weight:700;font-size:13px; letter-spacing:.2px }
-    .mcai-status { margin-left:auto; font-size:11px; color:#a9b7ff; padding:3px 8px;border-radius:999px;
+    .bitvibe-title { font-weight:700;font-size:13px; letter-spacing:.2px }
+    .bitvibe-status { margin-left:auto; font-size:11px; color:#a9b7ff; padding:3px 8px;border-radius:999px;
       background:rgba(89,123,255,.12); border:1px solid rgba(89,123,255,.22); white-space:nowrap; }
-    .mcai-close { margin-left:8px;background:transparent;border:none;color:#b8c2ff; font-size:16px;line-height:1;cursor:pointer;border-radius:8px;padding:4px 6px; }
-    .mcai-close:hover { background:rgba(255,255,255,.06); color:#fff }
-    .mcai-body {
+    .bitvibe-close { margin-left:8px;background:transparent;border:none;color:#b8c2ff; font-size:16px;line-height:1;cursor:pointer;border-radius:8px;padding:4px 6px; }
+    .bitvibe-close:hover { background:rgba(255,255,255,.06); color:#fff }
+    .bitvibe-body {
       padding:12px 14px;
       display:grid; gap:10px; overflow:auto;
       background: transparent;
     }
-    .mcai-section { display:grid; gap:8px; padding:10px; border:1px solid rgba(120,148,255,.15); border-radius:12px;
+    .bitvibe-section { display:grid; gap:8px; padding:10px; border:1px solid rgba(120,148,255,.15); border-radius:12px;
       background: linear-gradient(180deg, rgba(18,24,48,.65), rgba(12,18,36,.65)); }
-    .mcai-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .mcai-label { font-size:11px;color:#9eb2ff; text-transform:uppercase; letter-spacing:.08em }
-    .mcai-select, .mcai-textarea, .mcai-btn {
+    .bitvibe-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .bitvibe-label { font-size:11px;color:#9eb2ff; text-transform:uppercase; letter-spacing:.08em }
+    .bitvibe-select, .bitvibe-textarea, .bitvibe-btn {
       border-radius:10px; border:1px solid rgba(120,148,255,.2); background:#0b1020; color:#e6eaf7;
       padding:10px 12px; font:13px/1.35 inherit; outline:none; transition: border-color .15s, box-shadow .15s, background-color .15s, transform .06s; }
-    .mcai-select:hover, .mcai-textarea:hover { border-color: rgba(125,225,255,.35); }
-    .mcai-select:focus, .mcai-textarea:focus { border-color:#7de1ff; box-shadow:0 0 0 3px rgba(125,225,255,.15); }
-    .mcai-select { flex:1; min-width:220px; }
-    .mcai-textarea { resize:vertical; min-height:84px; width:100%; }
-    .mcai-btn { cursor:pointer; user-select:none; font-weight:700; letter-spacing:.2px;
+    .bitvibe-select:hover, .bitvibe-textarea:hover { border-color: rgba(125,225,255,.35); }
+    .bitvibe-select:focus, .bitvibe-textarea:focus { border-color:#7de1ff; box-shadow:0 0 0 3px rgba(125,225,255,.15); }
+    .bitvibe-select { flex:1; min-width:220px; }
+    .bitvibe-textarea { resize:vertical; min-height:84px; width:100%; }
+    .bitvibe-btn { cursor:pointer; user-select:none; font-weight:700; letter-spacing:.2px;
       background: linear-gradient(180deg,#3e7bff,#2d67ff); border-color: rgba(89,123,255,.35); color:#fff; box-shadow: 0 6px 18px rgba(46,102,255,.35); }
-    .mcai-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(46,102,255,.45); }
-    .mcai-btn:active { transform: translateY(0); box-shadow: 0 6px 18px rgba(46,102,255,.35); }
-    .mcai-checkbox { display:flex; align-items:center; gap:8px; color:#cfe3ff; font-size:12px; }
+    .bitvibe-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(46,102,255,.45); }
+    .bitvibe-btn:active { transform: translateY(0); box-shadow: 0 6px 18px rgba(46,102,255,.35); }
+    .bitvibe-checkbox { display:flex; align-items:center; gap:8px; color:#cfe3ff; font-size:12px; }
 
     /* Feedback sits within content flow above console */
-    .mcai-feedback { display:none; margin:0 14px; }
-    .mcai-feedback-inner { padding:12px; border:1px solid rgba(120,148,255,.25); border-radius:12px; background: linear-gradient(180deg,#131b38,#0f1832); box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
-    .mcai-fb-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
-    .mcai-fb-title { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#8fb7ff; display:flex; gap:8px; align-items:center; }
-    .mcai-pill { width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%; background:#3b82f6; color:#0b1020; font-weight:800; font-size:11px; }
-    .mcai-fb-toggle { background:rgba(148,163,255,.12); color:#d7e1ff; border:1px solid rgba(148,163,255,.32); border-radius:999px; padding:4px 10px; font-size:11px; cursor:pointer; }
-    .mcai-fb-lines { display:grid; gap:6px; }
-    .mcai-fb-bubble { padding:8px 10px; border-left:3px solid #3b82f6; border-radius:8px; background:rgba(59,130,246,.16); color:#f1f6ff; }
+    .bitvibe-feedback { display:none; margin:0 14px; }
+    .bitvibe-feedback-inner { padding:12px; border:1px solid rgba(120,148,255,.25); border-radius:12px; background: linear-gradient(180deg,#131b38,#0f1832); box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
+    .bitvibe-fb-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
+    .bitvibe-fb-title { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#8fb7ff; display:flex; gap:8px; align-items:center; }
+    .bitvibe-pill { width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%; background:#3b82f6; color:#0b1020; font-weight:800; font-size:11px; }
+    .bitvibe-fb-toggle { background:rgba(148,163,255,.12); color:#d7e1ff; border:1px solid rgba(148,163,255,.32); border-radius:999px; padding:4px 10px; font-size:11px; cursor:pointer; }
+    .bitvibe-fb-lines { display:grid; gap:6px; }
+    .bitvibe-fb-bubble { padding:8px 10px; border-left:3px solid #3b82f6; border-radius:8px; background:rgba(59,130,246,.16); color:#f1f6ff; }
 
     /* Console is a dedicated bottom row (no overlap) */
-    .mcai-console {
+    .bitvibe-console {
       display:grid; grid-template-rows: auto 1fr;
       border-top:1px solid rgba(120,148,255,.18);
       background:#0c1230;
     }
-    .mcai-console-head {
+    .bitvibe-console-head {
       display:flex; align-items:center; justify-content:space-between;
       padding:8px 12px; color:#a9b7ff; font-weight:600;
     }
-    .mcai-console-toggle {
+    .bitvibe-console-toggle {
       background:rgba(148,163,255,.12); color:#d7e1ff; border:1px solid rgba(148,163,255,.32);
       border-radius:999px; padding:4px 10px; font-size:11px; cursor:pointer;
     }
-    .mcai-log {
+    .bitvibe-log {
       margin:0 12px 12px; height:120px;
       padding:10px 12px; font:12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Roboto Mono", monospace;
       color:#a9b7ff; background:#0b1026; border:1px solid rgba(120,148,255,.18); border-radius:10px; overflow:auto; scrollbar-width: thin;
     }
 
     /* Panel show animation */
-    .mcai-show { display:block !important; transform: scale(1) !important; opacity: 1 !important; }
+    .bitvibe-show { display:block !important; transform: scale(1) !important; opacity: 1 !important; }
 
     /* Corner resizer */
-    .mcai-resize {
+    .bitvibe-resize {
       position:absolute; width:16px; height:16px; right:8px; bottom:8px; cursor:nwse-resize; opacity:.9; z-index:3;
       background: linear-gradient(135deg,transparent 52%, rgba(125,225,255,.35) 52% 60%, transparent 0) no-repeat,
                   linear-gradient(135deg,transparent 62%, rgba(125,225,255,.25) 62% 70%, transparent 0) no-repeat,
@@ -178,74 +178,74 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   `;
 
   const card = document.createElement('div');
-  card.className = 'mcai-card';
+  card.className = 'bitvibe-card';
 
   // Header
   const header = document.createElement('div');
-  header.className = 'mcai-header';
+  header.className = 'bitvibe-header';
   header.innerHTML = `
-    <div class="mcai-logo">M</div>
-    <div class="mcai-title">bit:vibe</div>
-    <span id="status" class="mcai-status">Idle</span>
-    <button id="mcai-close" class="mcai-close" title="Hide panel">✕</button>
+    <div class="bitvibe-logo">M</div>
+    <div class="bitvibe-title">bit:vibe</div>
+    <span id="status" class="bitvibe-status">Idle</span>
+    <button id="bitvibe-close" class="bitvibe-close" title="Hide panel">✕</button>
   `;
 
   // Body (content area)
   const body = document.createElement('div');
-  body.className = 'mcai-body';
+  body.className = 'bitvibe-body';
   body.innerHTML = `
-    <div class="mcai-section">
-      <div class="mcai-label">Engine</div>
-      <div class="mcai-row">
-        <select id="engine" class="mcai-select"><option>Loading…</option></select>
+    <div class="bitvibe-section">
+      <div class="bitvibe-label">Engine</div>
+      <div class="bitvibe-row">
+        <select id="engine" class="bitvibe-select"><option>Loading…</option></select>
       </div>
     </div>
 
-    <div class="mcai-section">
-      <div class="mcai-label">Target & Context</div>
-      <div class="mcai-row">
-        <select id="target" class="mcai-select">
+    <div class="bitvibe-section">
+      <div class="bitvibe-label">Target & Context</div>
+      <div class="bitvibe-row">
+        <select id="target" class="bitvibe-select">
           <option value="microbit">micro:bit</option>
           <option value="arcade">Arcade</option>
           <option value="maker">Maker</option>
         </select>
-        <label class="mcai-checkbox"><input id="inc" type="checkbox" checked>Use current code</label>
+        <label class="bitvibe-checkbox"><input id="inc" type="checkbox" checked>Use current code</label>
       </div>
     </div>
 
-    <div class="mcai-section">
-      <div class="mcai-label">Prompt</div>
-      <textarea id="p" class="mcai-textarea" rows="4" placeholder="Describe what you want the block code to do — be specific"></textarea>
-      <div class="mcai-row">
-        <button id="go" class="mcai-btn" style="flex:1">Generate & Paste</button>
-        <button id="revert" class="mcai-btn" style="flex:1; background:#1b2746; border-color:rgba(120,148,255,.25)">Revert</button>
+    <div class="bitvibe-section">
+      <div class="bitvibe-label">Prompt</div>
+      <textarea id="p" class="bitvibe-textarea" rows="4" placeholder="Describe what you want the block code to do — be specific"></textarea>
+      <div class="bitvibe-row">
+        <button id="go" class="bitvibe-btn" style="flex:1">Generate & Paste</button>
+        <button id="revert" class="bitvibe-btn" style="flex:1; background:#1b2746; border-color:rgba(120,148,255,.25)">Revert</button>
       </div>
     </div>
 
-    <div class="mcai-feedback" id="fb">
-      <div class="mcai-feedback-inner">
-        <div class="mcai-fb-head">
-          <div class="mcai-fb-title"><span class="mcai-pill">i</span> Model Feedback</div>
-          <button id="fbToggle" class="mcai-fb-toggle" aria-expanded="true">Hide</button>
+    <div class="bitvibe-feedback" id="fb">
+      <div class="bitvibe-feedback-inner">
+        <div class="bitvibe-fb-head">
+          <div class="bitvibe-fb-title"><span class="bitvibe-pill">i</span> Model Feedback</div>
+          <button id="fbToggle" class="bitvibe-fb-toggle" aria-expanded="true">Hide</button>
         </div>
-        <div id="fbLines" class="mcai-fb-lines"></div>
+        <div id="fbLines" class="bitvibe-fb-lines"></div>
       </div>
     </div>
   `;
 
   // Console row (never overlaps)
   const consoleWrap = document.createElement('div');
-  consoleWrap.className = 'mcai-console';
+  consoleWrap.className = 'bitvibe-console';
   consoleWrap.innerHTML = `
-    <div class="mcai-console-head">
+    <div class="bitvibe-console-head">
       <div>Console</div>
-      <button id="consoleToggle" class="mcai-console-toggle">Collapse</button>
+      <button id="consoleToggle" class="bitvibe-console-toggle">Collapse</button>
     </div>
-    <div id="log" class="mcai-log"></div>
+    <div id="log" class="bitvibe-log"></div>
   `;
 
   // Resizer
-  const rz = document.createElement('div'); rz.id = 'rz'; rz.className = 'mcai-resize';
+  const rz = document.createElement('div'); rz.id = 'rz'; rz.className = 'bitvibe-resize';
 
   // Assemble
   ui.appendChild(css);
@@ -259,15 +259,15 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   // Exclusive states: only launcher OR panel visible
   function showPanel() {
     ui.style.display = 'block';
-    requestAnimationFrame(() => ui.classList.add('mcai-show'));
+    requestAnimationFrame(() => ui.classList.add('bitvibe-show'));
     launcher.style.display = 'none';
   }
   function hidePanel() {
-    ui.classList.remove('mcai-show');
+    ui.classList.remove('bitvibe-show');
     setTimeout(() => { ui.style.display = 'none'; launcher.style.display = 'flex'; }, 180);
   }
   function togglePanel() {
-    if (ui.style.display === 'none' || !ui.classList.contains('mcai-show')) showPanel();
+    if (ui.style.display === 'none' || !ui.classList.contains('bitvibe-show')) showPanel();
     else hidePanel();
   }
 
@@ -282,7 +282,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   // ---------- Refs ----------
   const $ = (s) => ui.querySelector(s);
   const statusEl = $('#status');
-  const closeBtn = $('#mcai-close');
+  const closeBtn = $('#bitvibe-close');
   const resizer = $('#rz');
   const engine = $('#engine');
   const tgtSel = $('#target');
@@ -361,7 +361,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
       feedbackCollapsed = false; feedbackBox.style.display = 'none'; feedbackToggle.style.visibility = 'hidden'; return;
     }
     list.forEach(msg => {
-      const b = document.createElement('div'); b.className = 'mcai-fb-bubble'; b.textContent = String(msg).trim(); feedbackLines.appendChild(b);
+      const b = document.createElement('div'); b.className = 'bitvibe-fb-bubble'; b.textContent = String(msg).trim(); feedbackLines.appendChild(b);
     });
     feedbackToggle.style.visibility = 'visible'; feedbackBox.style.display = 'block'; feedbackCollapsed = false; applyFeedbackCollapse();
   }
@@ -455,6 +455,10 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     });
   }).then(() => { if (!__undoStack.length) revertBtn.disabled = true; });
 
+  function requestManaged(path, options = {}) {
+    return fetch(BACKEND + path, options);
+  }
+
   // ---------- Config fetch / auto-apply engine ----------
   function applyEngineOptions(cfg) {
     engine.innerHTML = "";
@@ -465,7 +469,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   }
   function fetchConfig() {
     const headers = APP_TOKEN ? { "Authorization": "Bearer " + APP_TOKEN } : {};
-    return fetch(BACKEND + "/mcai/config", { headers })
+    return requestManaged("/bitvibe/config", { headers })
       .then(r => r.json())
       .then(cfg => { applyEngineOptions(cfg); })
       .catch(e => { logLine("Config load failed: " + (e && e.message ? e.message : e)); });
@@ -476,7 +480,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   function setActiveEngine(preset) {
     const headers = { "Content-Type": "application/json" };
     if (APP_TOKEN) headers["Authorization"] = "Bearer " + APP_TOKEN;
-    return fetch(BACKEND + "/mcai/config", {
+    return requestManaged("/bitvibe/config", {
       method: "POST", headers, body: JSON.stringify({ preset })
     }).then(r => {
       if (!r.ok) return r.json().then(j => { throw new Error(j && j.error || ('HTTP ' + r.status)); });
@@ -530,7 +534,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     curP.then(cur => {
       const headers = { "Content-Type": "application/json" };
       if (APP_TOKEN) headers["Authorization"] = "Bearer " + APP_TOKEN;
-      return fetch(BACKEND + "/mcai/generate", {
+      return requestManaged("/bitvibe/generate", {
         method: "POST", headers, body: JSON.stringify({ target: t, request: req, currentCode: cur })
       }).then(r => {
         if (!r.ok) return r.json().then(j => { throw new Error(j && j.error || ('HTTP ' + r.status)); });

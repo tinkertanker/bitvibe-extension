@@ -1,0 +1,11 @@
+{
+  "name": "bitvibe-managed-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reference managed backend for bit:vibe",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs"
+  }
+}

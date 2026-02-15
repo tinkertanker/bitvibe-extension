@@ -10,6 +10,7 @@ This repository ships one school-facing runtime that supports both:
 - Runtime script for shipping/testing: `work.js`
 - Extension build output: `dist/`
 - Packaged zip output: `artifacts/bit-vibe-extension.zip`
+- Managed backend reference: `apps/backend/src/server.mjs`
 
 `client.js` is legacy and not the primary build source.
 
@@ -34,7 +35,7 @@ Use this exact flow when asked to prepare a testable build:
 - Optional app token:
   - `APP_TOKEN` (Bearer token to your backend)
 - Endpoint:
-  - `POST {BACKEND}/mcai/generate`
+  - `POST {BACKEND}/bitvibe/generate`
 
 ### BYOK mode
 
@@ -52,6 +53,12 @@ Example:
 ```bash
 BITVIBE_BACKEND="https://your-server.example" BITVIBE_APP_TOKEN="optional-token" npm run package
 ```
+
+## Managed backend in-repo
+
+- Start backend: `npm run backend:start`
+- Dev backend (watch): `npm run backend:dev`
+- Backend env template: `apps/backend/.env.example`
 
 ## Smoke-test checklist
 

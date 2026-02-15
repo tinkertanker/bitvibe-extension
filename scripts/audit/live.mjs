@@ -225,8 +225,8 @@ try {
   await ensureAuditRuntime(page, runtimeSource);
 
   if (hasManaged) {
-    // Mirror runtime construction exactly: BACKEND + "/mcai/generate"
-    const managedTarget = managedBackend + "/mcai/generate";
+    // Mirror runtime construction exactly: BACKEND + "/bitvibe/generate"
+    const managedTarget = managedBackend + "/bitvibe/generate";
     const managedProxyCounter = { count: 0 };
     const managedProxyHandler = createProxyHandler(managedProxyCounter);
     const managedPattern = new RegExp(`^${managedTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`);

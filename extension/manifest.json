@@ -17,7 +17,7 @@
     }
   ],
   "host_permissions": [
-    "https://mcai.dev.tk.sg/*",
+    "https://bitvibe.dev.tk.sg/*",
     "https://api.openai.com/*",
     "https://generativelanguage.googleapis.com/*",
     "https://openrouter.ai/*"

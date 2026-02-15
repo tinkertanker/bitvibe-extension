@@ -5,3 +5,4 @@ output/playwright/
 .DS_Store
 .env.audit
 .env.audit.local
+apps/backend/.env

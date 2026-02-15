@@ -1,16 +1,32 @@
-const BACKEND = "https://mcai.dev.tk.sg";
+const BACKEND = "https://bitvibe.dev.tk.sg";
 const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
 (function () {
-  if (window.__mcBlocksStrict) return;
-  window.__mcBlocksStrict = 1;
+  if (window.__bitvibeStrict) return;
+  window.__bitvibeStrict = 1;
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const STORAGE_MODE = "__mc_ai_mode";
-  const STORAGE_KEY = "__mc_ai_key";
-  const STORAGE_PROVIDER = "__mc_ai_provider";
-  const STORAGE_MODEL = "__mc_ai_model";
+  const STORAGE_MODE = "__bitvibe_mode";
+  const STORAGE_KEY = "__bitvibe_key";
+  const STORAGE_PROVIDER = "__bitvibe_provider";
+  const STORAGE_MODEL = "__bitvibe_model";
+
+  const storageGet = (key) => {
+    try {
+      const value = localStorage.getItem(key);
+      if (value !== null) return value;
+    } catch (error) {
+    }
+    return null;
+  };
+
+  const storageSet = (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+    }
+  };
 
   const ui = document.createElement("div");
   ui.style.cssText = "position:fixed;right:12px;bottom:12px;width:460px;max-height:84vh;overflow:auto;background:#0b1020;color:#e6e8ef;font-family:system-ui,Segoe UI,Arial,sans-serif;border:1px solid #21304f;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:2147483647";
@@ -164,19 +180,19 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     byokRow.style.display = isByok ? "flex" : "none";
     byokKeyRow.style.display = isByok ? "flex" : "none";
     managedHint.style.display = isByok ? "none" : "block";
-    localStorage.setItem(STORAGE_MODE, modeSel.value);
+    storageSet(STORAGE_MODE, modeSel.value);
   };
 
   try {
-    const savedMode = localStorage.getItem(STORAGE_MODE);
+    const savedMode = storageGet(STORAGE_MODE);
     if (savedMode === "managed" || savedMode === "byok") {
       modeSel.value = savedMode;
     }
-    const savedKey = localStorage.getItem(STORAGE_KEY);
+    const savedKey = storageGet(STORAGE_KEY);
     if (savedKey) keyInput.value = savedKey;
-    const savedProvider = localStorage.getItem(STORAGE_PROVIDER);
+    const savedProvider = storageGet(STORAGE_PROVIDER);
     if (savedProvider) providerSel.value = savedProvider;
-    const savedModel = localStorage.getItem(STORAGE_MODEL);
+    const savedModel = storageGet(STORAGE_MODEL);
     if (savedModel) modelInput.value = savedModel;
   } catch (error) {
   }
@@ -184,20 +200,14 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   modeSel.onchange = applyMode;
   providerSel.onchange = () => {
-    try {
-      localStorage.setItem(STORAGE_PROVIDER, providerSel.value);
-    } catch (error) {
-    }
+    storageSet(STORAGE_PROVIDER, providerSel.value);
   };
   modelInput.onchange = () => {
-    try {
-      localStorage.setItem(STORAGE_MODEL, modelInput.value.trim());
-    } catch (error) {
-    }
+    storageSet(STORAGE_MODEL, modelInput.value.trim());
   };
   saveBtn.onclick = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, keyInput.value.trim());
+      storageSet(STORAGE_KEY, keyInput.value.trim());
       setStatus("Key saved");
       logLine("BYOK API key saved in this browser.");
     } catch (error) {
@@ -640,7 +650,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   };
 
   const requestBackendGenerate = (payload) => {
-    return fetch(BACKEND + "/mcai/generate", {
+    return fetch(BACKEND + "/bitvibe/generate", {
       method: "POST",
       headers: buildBackendHeaders(),
       body: JSON.stringify(payload)
@@ -705,12 +715,9 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
         const provider = providerSel.value;
         const model = modelInput.value.trim();
 
-        try {
-          localStorage.setItem(STORAGE_KEY, apiKey);
-          localStorage.setItem(STORAGE_PROVIDER, provider);
-          localStorage.setItem(STORAGE_MODEL, model);
-        } catch (error) {
-        }
+        storageSet(STORAGE_KEY, apiKey);
+        storageSet(STORAGE_PROVIDER, provider);
+        storageSet(STORAGE_MODEL, model);
 
         logLine("Mode: BYOK.");
         return askValidated(provider, apiKey, model, sysFor(target), userFor(request, currentCode), target);
