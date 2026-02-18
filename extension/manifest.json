@@ -1,25 +1,40 @@
 {
   "manifest_version": 3,
   "name": "bit:vibe",
-  "description": "Inject the bit:vibe panel into MakeCode editors.",
+  "description": "AI code generation for MakeCode editors.",
   "version": "0.1.0",
-  "content_scripts": [
-    {
-      "matches": [
-        "https://makecode.microbit.org/*",
-        "https://arcade.makecode.com/*",
-        "https://maker.makecode.com/*"
-      ],
-      "js": [
-        "content-script.js"
-      ],
-      "run_at": "document_idle"
-    }
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "bit:vibe"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": [
+      "https://makecode.microbit.org/*",
+      "https://arcade.makecode.com/*",
+      "https://maker.makecode.com/*"
+    ],
+    "js": ["content-script.js"],
+    "run_at": "document_idle"
+  }],
+  "permissions": [
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "https://bitvibe.dev.tk.sg/*",
     "https://api.openai.com/*",
     "https://generativelanguage.googleapis.com/*",
-    "https://openrouter.ai/*"
+    "https://openrouter.ai/*",
+    "https://makecode.microbit.org/*",
+    "https://arcade.makecode.com/*",
+    "https://maker.makecode.com/*"
   ]
 }

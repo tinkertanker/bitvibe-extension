@@ -29,7 +29,8 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   };
 
   const ui = document.createElement("div");
-  ui.style.cssText = "position:fixed;right:12px;bottom:12px;width:460px;max-height:84vh;overflow:auto;background:#0b1020;color:#e6e8ef;font-family:system-ui,Segoe UI,Arial,sans-serif;border:1px solid #21304f;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;z-index:2147483647";
+  ui.id = "bitvibe-panel";
+  ui.style.cssText = "position:fixed;right:12px;bottom:12px;width:460px;max-height:84vh;overflow:auto;background:#0b1020;color:#e6e8ef;font-family:system-ui,Segoe UI,Arial,sans-serif;border:1px solid #21304f;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:none;flex-direction:column;z-index:2147483647";
   ui.innerHTML = ""
     + '<div id="h" style="cursor:move;display:flex;align-items:center;padding:10px 12px;background:#111936;border-bottom:1px solid #21304f">'
     + '  <span style="font-weight:600;font-size:13px">bit:vibe</span>'
@@ -84,6 +85,20 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '<div id="log" style="padding:10px 12px;font-size:11px;color:#9bb1dd;display:block;max-height:200px;overflow:auto"></div>'
     + '<div id="rz" style="position:absolute;width:14px;height:14px;right:2px;bottom:2px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#2b3a5a 50%);opacity:.9"></div>';
   document.body.appendChild(ui);
+
+  const fab = document.createElement("div");
+  fab.id = "bitvibe-fab";
+  fab.title = "bit:vibe \u2013 AI code generator";
+  fab.style.cssText = "position:fixed;right:20px;bottom:68px;width:44px;height:44px;border-radius:5px;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(59,130,246,.45);z-index:2147483647;transition:transform .15s ease,box-shadow .15s ease;border:none;";
+  fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none">'
+    + '<path d="M9.5 2L10.7 6.5 15 8l-4.3 1.5L9.5 14l-1.2-4.5L4 8l4.3-1.5L9.5 2z" fill="#fff"/>'
+    + '<path d="M19 10l.8 2.7L22.5 14l-2.7.8L19 17.5l-.8-2.7-2.7-.8 2.7-.8L19 10z" fill="#fff" opacity=".75"/>'
+    + '<path d="M14.5 2l.4 1.5L16.5 4l-1.6.5-.4 1.5-.4-1.5L12.5 4l1.6-.5.4-1.5z" fill="#fff" opacity=".5"/>'
+    + '</svg>';
+  fab.onmouseenter = function () { fab.style.transform = "scale(1.1)"; fab.style.boxShadow = "0 6px 20px rgba(99,102,241,.55)"; };
+  fab.onmouseleave = function () { fab.style.transform = "scale(1)"; fab.style.boxShadow = "0 4px 14px rgba(59,130,246,.45)"; };
+  fab.onclick = function () { fab.style.display = "none"; ui.style.display = "flex"; };
+  document.body.appendChild(fab);
 
   const $ = (s) => ui.querySelector(s);
   const header = $("#h");
@@ -836,6 +851,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   })();
 
   closeBtn.onclick = () => {
-    ui.remove();
+    ui.style.display = "none";
+    fab.style.display = "flex";
   };
 })();
