@@ -14,6 +14,8 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   const STORAGE_SETUP_DONE = "__vibbit_setup_done";
   const STORAGE_SERVER = "__vibbit_server";
   const STORAGE_TARGET = "__vibbit_target";
+  const STORAGE_STUDENT_TOKEN = "__vibbit_student_token";
+  const STORAGE_CLASSROOM_NAME = "__vibbit_classroom_name";
 
   const MODEL_PRESETS = {
     openai: [
@@ -85,6 +87,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '    <select id="setup-mode" style="' + S_SELECT + '">'
     + '      <option value="byok">Bring your own key</option>'
     + '      <option value="managed">Managed (school account)</option>'
+    + '      <option value="classroom">Classroom (join code)</option>'
     + '    </select>'
     + '  </div>'
 
@@ -115,6 +118,22 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '    <div style="display:grid;gap:4px">'
     + '      <div style="' + S_LABEL + '">Server URL</div>'
     + '      <input id="setup-server" placeholder="vibbit.tk.sg" style="' + S_INPUT + '">'
+    + '    </div>'
+    + '  </div>'
+
+    /* Classroom: join code + name + server */
+    + '  <div id="setup-classroom-fields" style="display:none;display:grid;gap:8px">'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Server URL</div>'
+    + '      <input id="setup-cr-server" placeholder="vibbit.tk.sg" style="' + S_INPUT + '">'
+    + '    </div>'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Join Code</div>'
+    + '      <input id="setup-cr-code" placeholder="e.g. ABC123" maxlength="6" style="' + S_INPUT + ';text-transform:uppercase;letter-spacing:0.1em;font-weight:600">'
+    + '    </div>'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Your Name</div>'
+    + '      <input id="setup-cr-name" placeholder="Your display name" style="' + S_INPUT + '">'
     + '    </div>'
     + '  </div>'
 
@@ -179,6 +198,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '    <select id="set-mode" style="' + S_SELECT + '">'
     + '      <option value="byok">Bring your own key</option>'
     + '      <option value="managed">Managed (school account)</option>'
+    + '      <option value="classroom">Classroom (join code)</option>'
     + '    </select>'
     + '  </div>'
 
@@ -213,6 +233,27 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '      <div style="' + S_LABEL + '">Server URL</div>'
     + '      <input id="set-server" placeholder="vibbit.tk.sg" style="' + S_INPUT + '">'
     + '    </div>'
+    + '  </div>'
+
+    /* Classroom: status + rejoin */
+    + '  <div id="set-classroom-info" style="display:none;display:grid;gap:8px">'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Classroom</div>'
+    + '      <div id="set-cr-status" style="font-size:12px;color:#c7d2fe;padding:8px;background:#111936;border-radius:8px">Not joined</div>'
+    + '    </div>'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Server URL</div>'
+    + '      <input id="set-cr-server" placeholder="vibbit.tk.sg" style="' + S_INPUT + '">'
+    + '    </div>'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Join Code</div>'
+    + '      <input id="set-cr-code" placeholder="e.g. ABC123" maxlength="6" style="' + S_INPUT + ';text-transform:uppercase;letter-spacing:0.1em;font-weight:600">'
+    + '    </div>'
+    + '    <div style="display:grid;gap:4px">'
+    + '      <div style="' + S_LABEL + '">Your Name</div>'
+    + '      <input id="set-cr-name" placeholder="Your display name" style="' + S_INPUT + '">'
+    + '    </div>'
+    + '    <button id="set-cr-join" style="' + S_BTN_PRIMARY + '">Join Classroom</button>'
     + '  </div>'
 
     /* advanced (collapsible) */
@@ -293,6 +334,10 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   const setupByokModel = $("#setup-byok-model");
   const setupByokKey = $("#setup-byok-key");
   const setupManagedServer = $("#setup-managed-server");
+  const setupClassroomFields = $("#setup-classroom-fields");
+  const setupCrServer = $("#setup-cr-server");
+  const setupCrCode = $("#setup-cr-code");
+  const setupCrName = $("#setup-cr-name");
   const setupGo = $("#setup-go");
 
   /* main view refs */
@@ -318,6 +363,12 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   const setByokModel = $("#set-byok-model");
   const setByokKey = $("#set-byok-key");
   const setManagedServer = $("#set-managed-server");
+  const setClassroomInfo = $("#set-classroom-info");
+  const setCrStatus = $("#set-cr-status");
+  const setCrServer = $("#set-cr-server");
+  const setCrCode = $("#set-cr-code");
+  const setCrName = $("#set-cr-name");
+  const setCrJoin = $("#set-cr-join");
   const saveBtn = $("#save");
   const backBtn = $("#back");
 
@@ -349,20 +400,41 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   /* ── mode-dependent field visibility ─────────────────────── */
   const applySetupMode = () => {
-    const isByok = setupMode.value === "byok";
+    const mode = setupMode.value;
+    const isByok = mode === "byok";
+    const isManaged = mode === "managed";
+    const isClassroom = mode === "classroom";
     setupByokProvider.style.display = isByok ? "grid" : "none";
     setupByokModel.style.display = isByok ? "grid" : "none";
     setupByokKey.style.display = isByok ? "grid" : "none";
-    setupManagedServer.style.display = isByok ? "none" : "grid";
+    setupManagedServer.style.display = isManaged ? "grid" : "none";
+    setupClassroomFields.style.display = isClassroom ? "grid" : "none";
   };
 
   const applySettingsMode = () => {
-    const isByok = setMode.value === "byok";
+    const mode = setMode.value;
+    const isByok = mode === "byok";
+    const isManaged = mode === "managed";
+    const isClassroom = mode === "classroom";
     setByokProvider.style.display = isByok ? "grid" : "none";
     setByokModel.style.display = isByok ? "grid" : "none";
     setByokKey.style.display = isByok ? "grid" : "none";
-    setManagedServer.style.display = isByok ? "none" : "grid";
+    setManagedServer.style.display = isManaged ? "grid" : "none";
+    setClassroomInfo.style.display = isClassroom ? "grid" : "none";
+    if (isClassroom) updateClassroomStatus();
     storageSet(STORAGE_MODE, setMode.value);
+  };
+
+  const updateClassroomStatus = () => {
+    const token = storageGet(STORAGE_STUDENT_TOKEN);
+    const name = storageGet(STORAGE_CLASSROOM_NAME);
+    if (token && name) {
+      setCrStatus.textContent = "Joined: " + name;
+      setCrStatus.style.color = "#86efac";
+    } else {
+      setCrStatus.textContent = "Not joined";
+      setCrStatus.style.color = "#c7d2fe";
+    }
   };
 
   /* ── state ───────────────────────────────────────────────── */
@@ -459,6 +531,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   populateModels(setupModel, savedProvider, savedModel);
   setupKey.value = savedKey;
   setupServer.value = savedServer || DEFAULT_SERVER;
+  setupCrServer.value = savedServer || DEFAULT_SERVER;
   applySetupMode();
 
   /* hydrate settings view */
@@ -467,6 +540,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   populateModels(setModel, savedProvider, savedModel);
   setKey.value = savedKey;
   setServer.value = savedServer || DEFAULT_SERVER;
+  setCrServer.value = savedServer || DEFAULT_SERVER;
   setTarget.value = savedTarget;
   applySettingsMode();
 
@@ -482,6 +556,20 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     populateModels(setupModel, setupProv.value, null);
   };
 
+  const classroomJoin = (serverHost, code, name) => {
+    const host = serverHost.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    const url = "https://" + host + "/classroom/join";
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinCode: code.toUpperCase(), displayName: name })
+    }).then(async (r) => {
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.error || "HTTP " + r.status);
+      return json;
+    });
+  };
+
   setupGo.onclick = () => {
     const mode = setupMode.value;
     if (mode === "byok") {
@@ -495,9 +583,44 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
       storageSet(STORAGE_PROVIDER, setupProv.value);
       storageSet(STORAGE_MODEL, setupModel.value);
       storageSet(STORAGE_KEY, key);
-    } else {
+    } else if (mode === "managed") {
       const server = setupServer.value.trim() || DEFAULT_SERVER;
       storageSet(STORAGE_SERVER, server);
+    } else if (mode === "classroom") {
+      const server = setupCrServer.value.trim() || DEFAULT_SERVER;
+      const code = setupCrCode.value.trim();
+      const name = setupCrName.value.trim();
+      if (!code || !name) {
+        if (!code) { setupCrCode.style.borderColor = "#ef4444"; setupCrCode.focus(); }
+        if (!name) setupCrName.style.borderColor = "#ef4444";
+        return;
+      }
+      setupCrCode.style.borderColor = "#29324e";
+      setupCrName.style.borderColor = "#29324e";
+      setupGo.disabled = true;
+      setupGo.textContent = "Joining...";
+      classroomJoin(server, code, name)
+        .then((result) => {
+          storageSet(STORAGE_SERVER, server);
+          storageSet(STORAGE_STUDENT_TOKEN, result.studentToken);
+          storageSet(STORAGE_CLASSROOM_NAME, result.classroomName || "Classroom");
+          storageSet(STORAGE_MODE, mode);
+          storageSet(STORAGE_SETUP_DONE, "1");
+          setMode.value = mode;
+          setServer.value = server;
+          setCrServer.value = server;
+          applySettingsMode();
+          showView("main");
+        })
+        .catch((err) => {
+          setupCrCode.style.borderColor = "#ef4444";
+          alert("Could not join: " + (err.message || err));
+        })
+        .finally(() => {
+          setupGo.disabled = false;
+          setupGo.textContent = "Get Started";
+        });
+      return; // async — don't fall through
     }
     storageSet(STORAGE_MODE, mode);
     storageSet(STORAGE_SETUP_DONE, "1");
@@ -545,6 +668,37 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   setTarget.onchange = () => {
     storageSet(STORAGE_TARGET, setTarget.value);
+  };
+
+  setCrJoin.onclick = () => {
+    const server = setCrServer.value.trim() || DEFAULT_SERVER;
+    const code = setCrCode.value.trim();
+    const name = setCrName.value.trim();
+    if (!code || !name) {
+      if (!code) setCrCode.style.borderColor = "#ef4444";
+      if (!name) setCrName.style.borderColor = "#ef4444";
+      return;
+    }
+    setCrCode.style.borderColor = "#29324e";
+    setCrName.style.borderColor = "#29324e";
+    setCrJoin.disabled = true;
+    setCrJoin.textContent = "Joining...";
+    classroomJoin(server, code, name)
+      .then((result) => {
+        storageSet(STORAGE_SERVER, server);
+        storageSet(STORAGE_STUDENT_TOKEN, result.studentToken);
+        storageSet(STORAGE_CLASSROOM_NAME, result.classroomName || "Classroom");
+        updateClassroomStatus();
+        logLine("Joined classroom: " + (result.classroomName || "OK"));
+      })
+      .catch((err) => {
+        setCrCode.style.borderColor = "#ef4444";
+        logLine("Join failed: " + (err.message || err));
+      })
+      .finally(() => {
+        setCrJoin.disabled = false;
+        setCrJoin.textContent = "Join Classroom";
+      });
   };
 
   gearBtn.onclick = () => showView("settings");
@@ -988,7 +1142,13 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   const buildBackendHeaders = () => {
     const headers = { "Content-Type": "application/json" };
-    if (APP_TOKEN) headers.Authorization = "Bearer " + APP_TOKEN;
+    const mode = storageGet(STORAGE_MODE) || "byok";
+    if (mode === "classroom") {
+      const studentToken = storageGet(STORAGE_STUDENT_TOKEN);
+      if (studentToken) headers.Authorization = "Bearer " + studentToken;
+    } else if (APP_TOKEN) {
+      headers.Authorization = "Bearer " + APP_TOKEN;
+    }
     return headers;
   };
 
@@ -1052,6 +1212,13 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
       .then((currentCode) => {
         if (mode === "managed") {
           logLine("Mode: Managed backend.");
+          return requestBackendGenerate({ target, request, currentCode });
+        }
+
+        if (mode === "classroom") {
+          const studentToken = storageGet(STORAGE_STUDENT_TOKEN);
+          if (!studentToken) throw new Error("Not joined to a classroom yet. Open Settings to join.");
+          logLine("Mode: Classroom.");
           return requestBackendGenerate({ target, request, currentCode });
         }
 

@@ -7,5 +7,9 @@
   "scripts": {
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "nanoid": "^5.1.6"
   }
 }

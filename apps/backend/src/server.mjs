@@ -1,4 +1,15 @@
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import {
+  createClassroom, getClassroom, getClassroomByTeacherToken,
+  updateClassroom, listClassroomsByTeacher,
+  joinClassroom, getStudentByToken, listStudents,
+  incrementStudentUsage, deactivateStudent, resetStudentUsage, hashToken
+} from "./db.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const PORT = Number(process.env.PORT || 8787);
 const ALLOW_ORIGIN = process.env.VIBBIT_ALLOW_ORIGIN || "*";
@@ -20,22 +31,33 @@ function apiKeyFor(provider) {
   return process.env.VIBBIT_API_KEY || "";
 }
 
+const CORS_METHODS = "GET,POST,PATCH,DELETE,OPTIONS";
+
 function respondJson(res, status, body, origin = "") {
   const allowOrigin = ALLOW_ORIGIN === "*" ? "*" : (origin || ALLOW_ORIGIN);
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods": CORS_METHODS,
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   });
   res.end(JSON.stringify(body));
+}
+
+function respondHtml(res, status, html, origin = "") {
+  const allowOrigin = ALLOW_ORIGIN === "*" ? "*" : (origin || ALLOW_ORIGIN);
+  res.writeHead(status, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Access-Control-Allow-Origin": allowOrigin
+  });
+  res.end(html);
 }
 
 function handleOptions(req, res) {
   const allowOrigin = ALLOW_ORIGIN === "*" ? "*" : (req.headers.origin || ALLOW_ORIGIN);
   res.writeHead(204, {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods": CORS_METHODS,
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400"
   });
@@ -327,14 +349,51 @@ function validatePayload(payload) {
   };
 }
 
+/* ── route helpers ────────────────────────────────────────── */
+
+function matchRoute(method, pathname, pattern) {
+  if (method !== pattern.method) return null;
+  const patternParts = pattern.path.split("/");
+  const pathParts = pathname.split("/");
+  if (patternParts.length !== pathParts.length) return null;
+  const params = {};
+  for (let i = 0; i < patternParts.length; i++) {
+    if (patternParts[i].startsWith(":")) {
+      params[patternParts[i].slice(1)] = pathParts[i];
+    } else if (patternParts[i] !== pathParts[i]) {
+      return null;
+    }
+  }
+  return params;
+}
+
+function requireTeacherAuth(req, res, origin) {
+  const raw = extractBearerToken(req.headers.authorization);
+  if (!raw) {
+    respondJson(res, 401, { error: "Missing teacher token" }, origin);
+    return null;
+  }
+  const classroom = getClassroomByTeacherToken(raw);
+  if (!classroom) {
+    respondJson(res, 401, { error: "Invalid teacher token" }, origin);
+    return null;
+  }
+  return classroom;
+}
+
+/* ── request server ──────────────────────────────────────── */
+
 const server = createServer(async (req, res) => {
   const origin = req.headers.origin || "";
-  const pathname = new URL(req.url || "/", "http://localhost").pathname;
+  const url = new URL(req.url || "/", "http://localhost");
+  const pathname = url.pathname;
 
   if (req.method === "OPTIONS") {
     handleOptions(req, res);
     return;
   }
+
+  /* ── health check ────────────────────────────────────── */
 
   if (pathname === "/healthz" && req.method === "GET") {
     respondJson(res, 200, {
@@ -346,15 +405,182 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  /* ── teacher dashboard ───────────────────────────────── */
+
+  if (pathname === "/dashboard" && req.method === "GET") {
+    try {
+      const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
+      respondHtml(res, 200, html, origin);
+    } catch {
+      respondHtml(res, 500, "<h1>Dashboard not found</h1>", origin);
+    }
+    return;
+  }
+
+  /* ── classroom: create ───────────────────────────────── */
+
+  if (pathname === "/classroom/create" && req.method === "POST") {
+    try {
+      const body = await readJson(req);
+      const name = (body.name || "").trim();
+      if (!name) {
+        respondJson(res, 400, { error: "'name' is required" }, origin);
+        return;
+      }
+      const result = createClassroom({
+        name,
+        requestLimit: body.requestLimit != null ? Number(body.requestLimit) : undefined,
+        maxStudents: body.maxStudents != null ? Number(body.maxStudents) : undefined
+      });
+      respondJson(res, 201, result, origin);
+    } catch (error) {
+      respondJson(res, 500, { error: error.message || "Failed to create classroom" }, origin);
+    }
+    return;
+  }
+
+  /* ── classroom: join (student) ───────────────────────── */
+
+  if (pathname === "/classroom/join" && req.method === "POST") {
+    try {
+      const body = await readJson(req);
+      const joinCode = (body.joinCode || "").trim().toUpperCase();
+      const displayName = (body.displayName || "").trim();
+      if (!joinCode || !displayName) {
+        respondJson(res, 400, { error: "'joinCode' and 'displayName' are required" }, origin);
+        return;
+      }
+      const result = joinClassroom({ joinCode, displayName });
+      if (result.error) {
+        respondJson(res, 400, { error: result.error }, origin);
+        return;
+      }
+      respondJson(res, 200, result, origin);
+    } catch (error) {
+      respondJson(res, 500, { error: error.message || "Failed to join classroom" }, origin);
+    }
+    return;
+  }
+
+  /* ── classroom: get details (teacher) ────────────────── */
+
+  if (pathname === "/classroom/mine" && req.method === "GET") {
+    const classroom = requireTeacherAuth(req, res, origin);
+    if (!classroom) return;
+    const students = listStudents(classroom.id);
+    respondJson(res, 200, {
+      id: classroom.id,
+      name: classroom.name,
+      joinCode: classroom.join_code,
+      requestLimit: classroom.request_limit,
+      maxStudents: classroom.max_students,
+      active: Boolean(classroom.active),
+      createdAt: classroom.created_at,
+      students
+    }, origin);
+    return;
+  }
+
+  /* ── classroom: list all for teacher ─────────────────── */
+
+  if (pathname === "/classroom/list" && req.method === "GET") {
+    const raw = extractBearerToken(req.headers.authorization);
+    if (!raw) {
+      respondJson(res, 401, { error: "Missing teacher token" }, origin);
+      return;
+    }
+    const classrooms = listClassroomsByTeacher(raw);
+    respondJson(res, 200, { classrooms: classrooms.map(c => ({
+      id: c.id,
+      name: c.name,
+      joinCode: c.join_code,
+      active: Boolean(c.active),
+      requestLimit: c.request_limit,
+      maxStudents: c.max_students,
+      createdAt: c.created_at
+    })) }, origin);
+    return;
+  }
+
+  /* ── classroom: update (teacher) ─────────────────────── */
+
+  if (pathname === "/classroom/mine" && req.method === "PATCH") {
+    const classroom = requireTeacherAuth(req, res, origin);
+    if (!classroom) return;
+    try {
+      const body = await readJson(req);
+      const fields = {};
+      if (body.name !== undefined) fields.name = String(body.name).trim();
+      if (body.requestLimit !== undefined) fields.request_limit = Number(body.requestLimit);
+      if (body.maxStudents !== undefined) fields.max_students = Number(body.maxStudents);
+      if (body.active !== undefined) fields.active = body.active ? 1 : 0;
+      updateClassroom(classroom.id, fields);
+      respondJson(res, 200, { ok: true }, origin);
+    } catch (error) {
+      respondJson(res, 500, { error: error.message || "Failed to update" }, origin);
+    }
+    return;
+  }
+
+  /* ── classroom: reset usage (teacher) ────────────────── */
+
+  if (pathname === "/classroom/mine/reset" && req.method === "POST") {
+    const classroom = requireTeacherAuth(req, res, origin);
+    if (!classroom) return;
+    resetStudentUsage(classroom.id);
+    respondJson(res, 200, { ok: true }, origin);
+    return;
+  }
+
+  /* ── classroom: remove student (teacher) ─────────────── */
+
+  {
+    const params = matchRoute(req.method, pathname, { method: "DELETE", path: "/classroom/students/:studentId" });
+    if (params) {
+      const classroom = requireTeacherAuth(req, res, origin);
+      if (!classroom) return;
+      const ok = deactivateStudent(params.studentId);
+      respondJson(res, ok ? 200 : 404, ok ? { ok: true } : { error: "Student not found" }, origin);
+      return;
+    }
+  }
+
+  /* ── generate (managed + classroom) ──────────────────── */
+
   if (pathname === "/vibbit/generate" && req.method === "POST") {
     try {
-      if (SERVER_APP_TOKEN) {
-        const token = extractBearerToken(req.headers.authorization);
-        if (!token || token !== SERVER_APP_TOKEN) {
+      const bearerToken = extractBearerToken(req.headers.authorization);
+
+      // Auth: try SERVER_APP_TOKEN first, then student token
+      if (SERVER_APP_TOKEN && bearerToken === SERVER_APP_TOKEN) {
+        // Authorized via static app token — proceed
+      } else if (bearerToken) {
+        // Try as student token
+        const student = getStudentByToken(bearerToken);
+        if (!student) {
           respondJson(res, 401, { error: "Unauthorized" }, origin);
           return;
         }
+        if (!student.active) {
+          respondJson(res, 403, { error: "Your access has been deactivated by the teacher" }, origin);
+          return;
+        }
+        const classroom = getClassroom(student.classroom_id);
+        if (!classroom || !classroom.active) {
+          respondJson(res, 403, { error: "Classroom is currently paused" }, origin);
+          return;
+        }
+        if (student.requests_used >= classroom.request_limit) {
+          respondJson(res, 429, { error: `Request limit reached (${classroom.request_limit}). Ask your teacher for more.` }, origin);
+          return;
+        }
+        incrementStudentUsage(student.id);
+      } else if (SERVER_APP_TOKEN) {
+        // Token required but not provided
+        respondJson(res, 401, { error: "Unauthorized" }, origin);
+        return;
       }
+      // If no SERVER_APP_TOKEN and no bearer token, allow through (open mode)
 
       const payload = await readJson(req);
       const validated = validatePayload(payload);
@@ -384,4 +610,5 @@ server.listen(PORT, () => {
   if (SERVER_APP_TOKEN) {
     console.log("[Vibbit backend] SERVER_APP_TOKEN auth enabled");
   }
+  console.log("[Vibbit backend] Teacher dashboard at /dashboard");
 });

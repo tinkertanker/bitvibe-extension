@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibbit Classroom Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.5; }
+  .container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; margin-bottom: 8px; }
+  .subtitle { color: #6e6e73; font-size: 0.9rem; margin-bottom: 24px; }
+  .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #3a3a3c; }
+  input, select { width: 100%; padding: 8px 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; }
+  input:focus, select:focus { outline: none; border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  button { padding: 8px 18px; border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+  .btn-primary { background: #0071e3; color: #fff; }
+  .btn-primary:hover { background: #0062cc; }
+  .btn-danger { background: #ff3b30; color: #fff; }
+  .btn-danger:hover { background: #d63026; }
+  .btn-secondary { background: #e8e8ed; color: #1d1d1f; }
+  .btn-secondary:hover { background: #d2d2d7; }
+  .btn-sm { padding: 4px 12px; font-size: 0.8rem; }
+  .join-code { font-size: 2rem; font-weight: 700; letter-spacing: 0.15em; color: #0071e3; text-align: center; padding: 16px; background: #f0f5ff; border-radius: 8px; margin: 12px 0; user-select: all; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  .badge-active { background: #d1f5d3; color: #1a7a2e; }
+  .badge-inactive { background: #fdd; color: #c33; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 10px; font-size: 0.85rem; }
+  th { border-bottom: 2px solid #e8e8ed; font-weight: 600; color: #6e6e73; }
+  td { border-bottom: 1px solid #f0f0f2; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  .hidden { display: none; }
+  .error { color: #ff3b30; font-size: 0.85rem; margin-top: 4px; }
+  .token-display { font-family: monospace; font-size: 0.8rem; background: #f5f5f7; padding: 8px; border-radius: 6px; word-break: break-all; margin: 8px 0; user-select: all; }
+  .info { font-size: 0.8rem; color: #6e6e73; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Vibbit Classroom</h1>
+  <p class="subtitle">Manage your classroom for MakeCode + Vibbit</p>
+
+  <!-- Login / Create -->
+  <div id="auth-section">
+    <div class="card">
+      <h2>Returning teacher?</h2>
+      <label for="teacher-token-input">Teacher Token</label>
+      <input type="password" id="teacher-token-input" placeholder="Paste your teacher token">
+      <button class="btn-primary" id="login-btn">Open Dashboard</button>
+      <div class="error hidden" id="login-error"></div>
+    </div>
+
+    <div class="card">
+      <h2>Create a new classroom</h2>
+      <label for="new-name">Classroom Name</label>
+      <input type="text" id="new-name" placeholder="e.g. Year 5 Computing">
+      <div class="row">
+        <div>
+          <label for="new-limit">Requests per Student</label>
+          <input type="number" id="new-limit" value="50" min="1">
+        </div>
+        <div>
+          <label for="new-max">Max Students</label>
+          <input type="number" id="new-max" value="40" min="1">
+        </div>
+      </div>
+      <button class="btn-primary" id="create-btn">Create Classroom</button>
+      <div class="error hidden" id="create-error"></div>
+    </div>
+  </div>
+
+  <!-- Created confirmation -->
+  <div id="created-section" class="hidden">
+    <div class="card">
+      <h2>Classroom Created!</h2>
+      <p>Share this join code with your students:</p>
+      <div class="join-code" id="created-join-code"></div>
+      <p><strong>Your teacher token</strong> (save this — it won't be shown again):</p>
+      <div class="token-display" id="created-teacher-token"></div>
+      <p class="info">You need this token to manage your classroom later.</p>
+      <button class="btn-primary" id="created-continue-btn" style="margin-top:12px">Open Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard-section" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2 id="dash-name"></h2>
+          <span class="badge" id="dash-status-badge"></span>
+        </div>
+        <button class="btn-secondary btn-sm" id="logout-btn">Switch Classroom</button>
+      </div>
+
+      <div class="join-code" id="dash-join-code"></div>
+      <p class="info" style="text-align:center">Students enter this code to join</p>
+
+      <div class="actions">
+        <button class="btn-primary btn-sm" id="toggle-active-btn"></button>
+        <button class="btn-secondary btn-sm" id="reset-usage-btn">Reset All Usage</button>
+        <button class="btn-secondary btn-sm" id="refresh-btn">Refresh</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="row">
+        <div>
+          <label for="edit-limit">Requests per Student</label>
+          <input type="number" id="edit-limit" min="1">
+        </div>
+        <div>
+          <label for="edit-max">Max Students</label>
+          <input type="number" id="edit-max" min="1">
+        </div>
+      </div>
+      <button class="btn-primary btn-sm" id="save-settings-btn">Save Settings</button>
+    </div>
+
+    <div class="card">
+      <h2>Students</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Requests</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody id="students-body"></tbody>
+      </table>
+      <p class="info" id="no-students" class="hidden" style="margin-top:8px;text-align:center">No students have joined yet.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+
+  let teacherToken = "";
+
+  function api(method, path, body) {
+    const opts = { method, headers: {} };
+    if (teacherToken) opts.headers["Authorization"] = "Bearer " + teacherToken;
+    if (body) {
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
+    }
+    return fetch(path, opts).then(async (r) => {
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.error || "HTTP " + r.status);
+      return json;
+    });
+  }
+
+  function showError(id, msg) {
+    const el = $(id);
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  }
+  function clearError(id) { $(id).classList.add("hidden"); }
+  function show(id) { $(id).classList.remove("hidden"); }
+  function hide(id) { $(id).classList.add("hidden"); }
+
+  /* ── auth ─────────────────────────────────────────── */
+
+  $("#login-btn").onclick = async () => {
+    clearError("#login-error");
+    const token = $("#teacher-token-input").value.trim();
+    if (!token) { showError("#login-error", "Please enter your teacher token"); return; }
+    teacherToken = token;
+    try {
+      await loadDashboard();
+      hide("#auth-section");
+      show("#dashboard-section");
+    } catch (e) {
+      teacherToken = "";
+      showError("#login-error", e.message);
+    }
+  };
+
+  /* ── create ───────────────────────────────────────── */
+
+  $("#create-btn").onclick = async () => {
+    clearError("#create-error");
+    const name = $("#new-name").value.trim();
+    if (!name) { showError("#create-error", "Classroom name is required"); return; }
+    try {
+      const result = await api("POST", "/classroom/create", {
+        name,
+        requestLimit: Number($("#new-limit").value) || 50,
+        maxStudents: Number($("#new-max").value) || 40
+      });
+      $("#created-join-code").textContent = result.joinCode;
+      $("#created-teacher-token").textContent = result.teacherToken;
+      teacherToken = result.teacherToken;
+      hide("#auth-section");
+      show("#created-section");
+    } catch (e) {
+      showError("#create-error", e.message);
+    }
+  };
+
+  $("#created-continue-btn").onclick = async () => {
+    hide("#created-section");
+    await loadDashboard();
+    show("#dashboard-section");
+  };
+
+  /* ── dashboard ────────────────────────────────────── */
+
+  async function loadDashboard() {
+    const data = await api("GET", "/classroom/mine");
+    $("#dash-name").textContent = data.name;
+    $("#dash-join-code").textContent = data.joinCode;
+    $("#edit-limit").value = data.requestLimit;
+    $("#edit-max").value = data.maxStudents;
+
+    const badge = $("#dash-status-badge");
+    if (data.active) {
+      badge.textContent = "Active";
+      badge.className = "badge badge-active";
+      $("#toggle-active-btn").textContent = "Pause Classroom";
+    } else {
+      badge.textContent = "Paused";
+      badge.className = "badge badge-inactive";
+      $("#toggle-active-btn").textContent = "Resume Classroom";
+    }
+
+    const tbody = $("#students-body");
+    tbody.innerHTML = "";
+    const students = data.students || [];
+    if (students.length === 0) {
+      show("#no-students");
+    } else {
+      hide("#no-students");
+      for (const s of students) {
+        const tr = document.createElement("tr");
+        const statusBadge = s.active
+          ? '<span class="badge badge-active">Active</span>'
+          : '<span class="badge badge-inactive">Removed</span>';
+        tr.innerHTML =
+          "<td>" + escHtml(s.display_name) + "</td>" +
+          "<td>" + s.requests_used + " / " + data.requestLimit + "</td>" +
+          "<td>" + statusBadge + "</td>" +
+          "<td>" + (s.active ? '<button class="btn-danger btn-sm remove-student" data-id="' + s.id + '">Remove</button>' : "") + "</td>";
+        tbody.appendChild(tr);
+      }
+    }
+
+    tbody.onclick = async (e) => {
+      if (!e.target.classList.contains("remove-student")) return;
+      const id = e.target.dataset.id;
+      if (!confirm("Remove this student?")) return;
+      await api("DELETE", "/classroom/students/" + id);
+      await loadDashboard();
+    };
+  }
+
+  function escHtml(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  $("#toggle-active-btn").onclick = async () => {
+    const current = $("#dash-status-badge").textContent === "Active";
+    await api("PATCH", "/classroom/mine", { active: !current });
+    await loadDashboard();
+  };
+
+  $("#reset-usage-btn").onclick = async () => {
+    if (!confirm("Reset all student usage counts to 0?")) return;
+    await api("POST", "/classroom/mine/reset");
+    await loadDashboard();
+  };
+
+  $("#refresh-btn").onclick = () => loadDashboard();
+
+  $("#save-settings-btn").onclick = async () => {
+    await api("PATCH", "/classroom/mine", {
+      requestLimit: Number($("#edit-limit").value) || 50,
+      maxStudents: Number($("#edit-max").value) || 40
+    });
+    await loadDashboard();
+  };
+
+  $("#logout-btn").onclick = () => {
+    teacherToken = "";
+    hide("#dashboard-section");
+    show("#auth-section");
+    $("#teacher-token-input").value = "";
+  };
+})();
+</script>
+</body>
+</html>
