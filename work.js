@@ -128,19 +128,26 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     /* header */
     + '<div id="h-main" style="cursor:move;display:flex;align-items:center;padding:10px 12px;background:#111936;border-bottom:1px solid #21304f">'
     + '  <span style="font-weight:600;font-size:13px">Vibbit</span>'
-    + '  <span id="status" style="margin-left:10px;font-size:11px;color:#9bb1dd">Idle</span>'
+    + '  <span id="busy-indicator" aria-hidden="true" style="margin-left:8px;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;opacity:0;visibility:hidden;transition:opacity .15s ease;">'
+    + '    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#9bb1dd" stroke-width="1.5" style="animation:vibbit-spin .9s linear infinite">'
+    + '      <circle cx="7" cy="7" r="5" stroke-opacity=".25"></circle>'
+    + '      <path d="M7 2a5 5 0 0 1 5 5" stroke-linecap="round"></path>'
+    + '    </svg>'
+    + '  </span>'
+    + '  <span id="status" style="display:none">Idle</span>'
     + '  <button id="gear" aria-label="Settings" style="margin-left:auto;' + S_ICON_BTN + '"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 01-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.17.31a1.464 1.464 0 01-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 01.872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.31-.17a1.464 1.464 0 012.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 012.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.17-.31a1.464 1.464 0 01.872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 01-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.31.17a1.464 1.464 0 01-2.105-.872zM8 10.93a2.929 2.929 0 110-5.86 2.929 2.929 0 010 5.858z"/></svg></button>'
     + '  <button id="x-main" aria-label="Close" style="margin-left:6px;' + S_ICON_BTN + '">' + CLOSE_SVG + '</button>'
     + '</div>'
 
     /* body */
-    + '<div style="padding:12px 14px;display:grid;gap:10px">'
+    + '<div style="padding:12px 14px;display:grid;gap:10px;align-content:start;min-height:170px">'
     + '  <textarea id="p" rows="6" placeholder="Describe what you want the block code to do \u2013 try to be specific" style="resize:vertical;min-height:96px;padding:10px;border-radius:8px;border:1px solid #29324e;background:#0b1020;color:#e6e8ef;font-size:13px;line-height:1.4"></textarea>'
     + '  <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:#c7d2fe;cursor:pointer"><input id="inc" type="checkbox" checked style="cursor:pointer">Use current code</label>'
-    + '  <div style="display:flex;gap:8px;flex-wrap:wrap">'
-    + '    <button id="go" style="flex:1 1 48%;padding:10px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:600;cursor:pointer">Generate &amp; Paste</button>'
-    + '    <button id="revert" style="flex:1 1 48%;padding:10px;border:1px solid #2b3a5a;border-radius:8px;background:#223058;color:#e6e8ef;cursor:pointer" disabled>Revert</button>'
+    + '  <div style="display:flex;gap:8px;align-items:center">'
+    + '    <button id="go" style="flex:1 1 auto;padding:10px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:600;cursor:pointer">Generate</button>'
+    + '    <button id="revert" aria-label="Revert to previous code" title="Revert to previous code" style="width:38px;height:38px;display:none;align-items:center;justify-content:center;border:1px solid #2b3a5a;border-radius:999px;background:#1a2745;color:#d6e4ff;cursor:pointer" disabled><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 4.5H8a4.5 4.5 0 1 1-4.5 4.5"/><path d="M3.5 4.5L6 2"/><path d="M3.5 4.5 6 7"/></svg></button>'
     + '  </div>'
+    + '  <div id="activity" style="min-height:18px;font-size:12px;line-height:1.2;color:#9bb1dd" aria-live="polite"></div>'
     + '</div>'
 
     /* feedback */
@@ -156,7 +163,10 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '</div>'
 
     /* log */
-    + '<div id="log" style="padding:10px 12px;font-size:11px;color:#9bb1dd;display:block;max-height:200px;overflow:auto"></div>'
+    + '<div style="margin:0 12px 10px;padding-top:8px;border-top:1px solid #1f2b47;">'
+    + '  <button id="logToggle" aria-expanded="false" style="background:transparent;border:none;color:#98add7;font-size:11px;cursor:pointer;padding:0;line-height:1.2">Show logs</button>'
+    + '  <div id="log" style="margin-top:8px;padding:8px 10px;font-size:11px;line-height:1.2;color:#9bb1dd;display:none;max-height:132px;overflow:auto;background:#0e162f;border:1px solid #22325a;border-radius:8px"></div>'
+    + '</div>'
     + '</div>'
 
     /* ═══ VIEW 3: SETTINGS ═══ */
@@ -234,6 +244,9 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '<div id="rz" style="position:absolute;width:14px;height:14px;right:2px;bottom:2px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#2b3a5a 50%);opacity:.9"></div>';
 
   document.body.appendChild(ui);
+  const runtimeStyle = document.createElement("style");
+  runtimeStyle.textContent = "@keyframes vibbit-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}";
+  document.head.appendChild(runtimeStyle);
 
   /* ── FAB ─────────────────────────────────────────────────── */
   const fab = document.createElement("div");
@@ -296,11 +309,14 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
 
   /* main view refs */
   const statusEl = $("#status");
+  const busyIndicator = $("#busy-indicator");
   const gearBtn = $("#gear");
   const promptEl = $("#p");
   const includeCurrent = $("#inc");
   const go = $("#go");
   const revertBtn = $("#revert");
+  const activityEl = $("#activity");
+  const logToggle = $("#logToggle");
   const log = $("#log");
   const feedbackBox = $("#fb");
   const feedbackLines = $("#fbLines");
@@ -382,14 +398,56 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   let undoStack = [];
   let busy = false;
   let feedbackCollapsed = false;
+  let logsCollapsed = true;
+  let activityTimer = 0;
 
   const setStatus = (value) => {
-    statusEl.textContent = value;
+    const next = value || "";
+    statusEl.textContent = next;
+    ui.dataset.status = next;
+  };
+
+  const setBusyIndicator = (on) => {
+    busyIndicator.style.visibility = on ? "visible" : "hidden";
+    busyIndicator.style.opacity = on ? "1" : "0";
+  };
+
+  const setActivity = (message, tone, persistent) => {
+    const palette = {
+      neutral: "#9bb1dd",
+      success: "#89e6a3",
+      error: "#fda4af"
+    };
+    clearTimeout(activityTimer);
+    activityEl.textContent = message || "";
+    activityEl.style.color = palette[tone || "neutral"] || palette.neutral;
+    if (message && !persistent) {
+      activityTimer = setTimeout(() => {
+        activityEl.textContent = "";
+        activityEl.style.color = palette.neutral;
+      }, 2600);
+    }
+  };
+
+  const refreshRevertButton = () => {
+    const canRevert = undoStack.length > 0 && !busy;
+    revertBtn.disabled = !canRevert;
+    revertBtn.style.display = canRevert ? "flex" : "none";
+    revertBtn.style.pointerEvents = canRevert ? "auto" : "none";
+    revertBtn.style.cursor = canRevert ? "pointer" : "default";
+    revertBtn.setAttribute("aria-hidden", canRevert ? "false" : "true");
+  };
+
+  const applyLogCollapse = () => {
+    log.style.display = logsCollapsed ? "none" : "block";
+    logToggle.textContent = logsCollapsed ? "Show logs" : "Hide logs";
+    logToggle.setAttribute("aria-expanded", logsCollapsed ? "false" : "true");
   };
 
   const logLine = (value) => {
     const row = document.createElement("div");
     row.textContent = value;
+    row.style.cssText = "line-height:1.2;padding:1px 0";
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
   };
@@ -444,6 +502,13 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     feedbackCollapsed = !feedbackCollapsed;
     applyFeedbackCollapse();
   };
+  logToggle.onclick = () => {
+    logsCollapsed = !logsCollapsed;
+    applyLogCollapse();
+  };
+  applyLogCollapse();
+  setBusyIndicator(false);
+  refreshRevertButton();
 
   /* ── resolve effective backend URL ───────────────────────── */
   const DEFAULT_SERVER = BACKEND.replace(/^https?:\/\//, "");
@@ -751,7 +816,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
           try {
             const previous = ctx.model.getValue() || "";
             undoStack.push(previous);
-            revertBtn.disabled = false;
+            refreshRevertButton();
             logLine("Snapshot saved for revert.");
           } catch (error) {
             logLine("Snapshot failed: " + error);
@@ -809,7 +874,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
         })();
       });
     }).then(() => {
-      if (!undoStack.length) revertBtn.disabled = true;
+      refreshRevertButton();
     });
   };
 
@@ -1229,6 +1294,9 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
   go.onclick = () => {
     if (busy) return;
     busy = true;
+    setBusyIndicator(true);
+    refreshRevertButton();
+    setActivity("", "neutral", true);
 
     clearLog();
     renderFeedback([]);
@@ -1238,7 +1306,10 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     const request = (promptEl.value || "").trim();
     if (!request) {
       busy = false;
+      setBusyIndicator(false);
+      refreshRevertButton();
       setStatus("Idle");
+      setActivity("Please enter a request.", "error");
       logLine("Please enter a request.");
       return;
     }
@@ -1246,7 +1317,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     const mode = storageGet(STORAGE_MODE) || "byok";
     const target = storageGet(STORAGE_TARGET) || "microbit";
     const originalText = go.textContent;
-    go.textContent = "Loading...";
+    go.textContent = "Generating...";
     go.disabled = true;
     go.style.opacity = "0.7";
     go.style.cursor = "not-allowed";
@@ -1285,6 +1356,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
         const code = extractCode(result && result.code ? result.code : "");
         if (!code) {
           setStatus("No code");
+          setActivity("No code returned.", "error");
           logLine("No code returned.");
           return;
         }
@@ -1302,45 +1374,49 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
           })
           .then(() => {
             setStatus("Done");
+            setActivity("Generation complete.", "success");
             logLine("Pasted and switched back to Blocks.");
           });
       })
       .catch((error) => {
         setStatus("Error");
+        setActivity("Generation failed. Check logs.", "error", true);
         logLine("Request failed: " + (error && error.message ? error.message : String(error)));
       })
       .finally(() => {
         busy = false;
+        setBusyIndicator(false);
         go.textContent = originalText;
         go.disabled = false;
         go.style.opacity = "";
         go.style.cursor = "pointer";
+        refreshRevertButton();
       });
   };
 
   revertBtn.onclick = () => {
-    if (revertBtn.disabled) return;
-    const originalText = revertBtn.textContent;
-    revertBtn.textContent = "Reverting...";
-    revertBtn.disabled = true;
-    revertBtn.style.opacity = "0.7";
-    revertBtn.style.cursor = "not-allowed";
+    if (revertBtn.disabled || busy) return;
+    busy = true;
+    setBusyIndicator(true);
+    refreshRevertButton();
     setStatus("Reverting");
+    setActivity("", "neutral", true);
     logLine("Reverting to previous snapshot...");
     revertEditor()
       .then(() => {
         setStatus("Reverted");
+        setActivity("Revert complete.", "success");
         logLine("Revert complete: restored previous code and switched back to Blocks.");
       })
       .catch((error) => {
         setStatus("Error");
+        setActivity("Revert failed. Check logs.", "error", true);
         logLine("Revert failed: " + (error && error.message ? error.message : String(error)));
       })
       .finally(() => {
-        revertBtn.textContent = originalText;
-        revertBtn.style.opacity = "";
-        revertBtn.style.cursor = "pointer";
-        if (undoStack.length) revertBtn.disabled = false;
+        busy = false;
+        setBusyIndicator(false);
+        refreshRevertButton();
       });
   };
 
