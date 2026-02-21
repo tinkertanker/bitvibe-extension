@@ -144,9 +144,9 @@ export function incrementStudentUsage(studentId) {
   db.prepare("UPDATE students SET requests_used = requests_used + 1 WHERE id = ?").run(studentId);
 }
 
-export function deactivateStudent(studentId) {
+export function deactivateStudent(studentId, classroomId) {
   const db = getDb();
-  return db.prepare("UPDATE students SET active = 0 WHERE id = ?").run(studentId).changes > 0;
+  return db.prepare("UPDATE students SET active = 0 WHERE id = ? AND classroom_id = ?").run(studentId, classroomId).changes > 0;
 }
 
 export function resetStudentUsage(classroomId) {

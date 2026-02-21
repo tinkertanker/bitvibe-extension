@@ -122,7 +122,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '  </div>'
 
     /* Classroom: join code + name + server */
-    + '  <div id="setup-classroom-fields" style="display:none;display:grid;gap:8px">'
+    + '  <div id="setup-classroom-fields" style="display:none;gap:8px">'
     + '    <div style="display:grid;gap:4px">'
     + '      <div style="' + S_LABEL + '">Server URL</div>'
     + '      <input id="setup-cr-server" placeholder="vibbit.tk.sg" style="' + S_INPUT + '">'
@@ -236,7 +236,7 @@ const APP_TOKEN = ""; // set only if your server enforces SERVER_APP_TOKEN
     + '  </div>'
 
     /* Classroom: status + rejoin */
-    + '  <div id="set-classroom-info" style="display:none;display:grid;gap:8px">'
+    + '  <div id="set-classroom-info" style="display:none;gap:8px">'
     + '    <div style="display:grid;gap:4px">'
     + '      <div style="' + S_LABEL + '">Classroom</div>'
     + '      <div id="set-cr-status" style="font-size:12px;color:#c7d2fe;padding:8px;background:#111936;border-radius:8px">Not joined</div>'

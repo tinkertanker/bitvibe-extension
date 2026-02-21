@@ -6,7 +6,7 @@ import {
   createClassroom, getClassroom, getClassroomByTeacherToken,
   updateClassroom, listClassroomsByTeacher,
   joinClassroom, getStudentByToken, listStudents,
-  incrementStudentUsage, deactivateStudent, resetStudentUsage, hashToken
+  incrementStudentUsage, deactivateStudent, resetStudentUsage
 } from "./db.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -539,7 +539,7 @@ const server = createServer(async (req, res) => {
     if (params) {
       const classroom = requireTeacherAuth(req, res, origin);
       if (!classroom) return;
-      const ok = deactivateStudent(params.studentId);
+      const ok = deactivateStudent(params.studentId, classroom.id);
       respondJson(res, ok ? 200 : 404, ok ? { ok: true } : { error: "Student not found" }, origin);
       return;
     }
